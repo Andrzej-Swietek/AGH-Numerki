@@ -6,8 +6,10 @@
 #include <iomanip>
 // #include "/usr/include/gsl/gsl_math.h"
 // #include "/usr/include/gsl/gsl_linalg.h"
-
+#include <omp.h>
 using namespace std;
+
+//#define PARALLEL true
 
 void displayMatrix(double (*matrix)[4], int columns, int rows, std::string name = "");
 
@@ -29,7 +31,6 @@ int main() {
     */
     double wynik[n];
 
-
     //------------------------------------------------------------------------------------------------
     // col = 0                  col = 1                col = 2                  col = 3 - wyrazy wolne
     mat[0][0] = -1;         mat[0][1] = 2;          mat[0][2] = 1;        /*   |  */       mat[0][3] = -1;
@@ -40,14 +41,28 @@ int main() {
     // ZEROWANIE- METODA ELIMINACJI GAUSA
     
     // ETAP I eliminacja zmiennych i macierz trójkątna
+
+#ifdef PARALLEL
+    for (i = 0; i < n - 1; i++) {
+    #pragma omp parallel for private(j, k) shared(mat)
+        for (j = i + 1; j < n; j++) {
+            double factor = mat[j][i] / mat[i][i];
+            for (k = 0; k < n + 1; k++) {
+                mat[j][k] -= factor * mat[i][k];
+            }
+        }
+    }
+#else
     for ( int i = 0; i < n-1; i++ )
-       for ( int j = i+1; j < n; j++ ) 
+       for ( int j = i+1; j < n; j++ )
        {
             double factor = mat[j][i] / mat[i][i];
 
             for ( k = 0; k < n+1; k++ )
-                mat[j][k] -= factor * mat[i][k]; 
+                mat[j][k] -= factor * mat[i][k];
        }
+#endif
+
 
     displayMatrix(mat,4, 3);
 
