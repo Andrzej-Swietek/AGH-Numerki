@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -7,6 +8,10 @@ Xb = 2.0
 
 output = pd.read_csv('data/output.txt', sep=' ', engine='python', header=None, names=['index', 'value'])
 exact_values = pd.read_csv('data/exact_solution.txt', sep=' ', engine='python', header=None, names=['index', 'exact_value'])
+
+mse = np.mean((output['value'] - exact_values['exact_value'])**2)
+print("Mean Square Error:", mse)
+
 
 # Plot data
 plt.plot(output['index'], output['value'], label='Numerical Solution')
