@@ -4,6 +4,7 @@
 #include <fstream>
 
 using namespace std;
+using Matrix = vector<vector<double>>;
 
 void initMatrix(double A[][7], int N)
 {
@@ -14,12 +15,13 @@ void initMatrix(double A[][7], int N)
     }
 }
 
-void transpose(double** A, int n)
+Matrix transpose(const Matrix& A, int n)
 {
+    Matrix transposed = A;
     for(int i = 0; i<n; i++)
         for(int j= 0; j < n; j++)
-            if(i != j) A[i][j] = A[j][i];
-  
+            if(i != j) transposed[i][j] = A[j][i];
+    return transposed;
 }
 
 double norm(const vector<double>&v)
@@ -67,8 +69,16 @@ double VectorDotProduct(vector<double>& x, vector<double>& y, int N) {
 }
 
 
-void powerMethod( double W[][7], int Kval, int N, int IT_MAX, ofstream& file)
+struct PowerMethodResult {
+    vector<double> eigen_values;
+    vector<vector<double>> eigen_vector_matrix;
+};
+
+
+PowerMethodResult powerMethod( double W[][7], int Kval, int N, int IT_MAX, ofstream& file)
 {
+    PowerMethodResult data;
+
     for(int k =0; k < Kval; k++)
     {
         vector<double> x_k(N, 1.0); // Inicjalizacja wektora startowego
@@ -93,14 +103,52 @@ void powerMethod( double W[][7], int Kval, int N, int IT_MAX, ofstream& file)
 
             x_k = result;
         }
+        data.eigen_values.push_back(lambda);
+        data.eigen_vector_matrix.push_back(x_k);
         file << "\n";
 
         for(int i =0; i < N; i++)
             for(int j =0; j < N; j++)
                 W[i][j] = W[i][j] - lambda * x_k[i] * x_k[j];
     }
+
+    return data;
 }
 
+
+Matrix multiplyMatrices(const Matrix& matrix1, const Matrix& matrix2) {
+    int rows1 = matrix1.size();
+    int cols1 = matrix1[0].size();
+    int rows2 = matrix2.size();
+    int cols2 = matrix2[0].size();
+
+    if (cols1 != rows2) {
+        cerr << "Error: Matrix dimensions mismatch for multiplication" << endl;
+        return vector<vector<double>>();
+    }
+
+    vector<vector<double>> result(rows1, vector<double>(cols2, 0.0));
+
+    for (int i = 0; i < rows1; ++i) {
+        for (int j = 0; j < cols2; ++j) {
+            for (int k = 0; k < cols1; ++k) {
+                result[i][j] += matrix1[i][k] * matrix2[k][j];
+            }
+        }
+    }
+
+    return result;
+}
+
+vector<vector<double>> arrayToVector(const double A[][7], int N) {
+    vector<vector<double>> result(N, vector<double>(N));
+
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            result[i][j] = A[i][j];
+
+    return result;
+}
 
 int main(){
     constexpr int N = 7;
@@ -119,13 +167,38 @@ int main(){
     cout << "Matrix A:" << endl;
     printMatrix(A, N);
     cout << "\n";
-    
 
-    powerMethod(W, Kval, N, IT_MAX, eigenvalues_file);
+
+    PowerMethodResult eigen_data = powerMethod(W, Kval, N, IT_MAX, eigenvalues_file);
+
+    cout << "[ Eigen Values ]: \n";
+    for ( double val : eigen_data.eigen_values )
+        cout << val << " ";
+    cout << "\n\n";
+
+
+    // X^T * A
+
+    Matrix transposed_X = transpose( eigen_data.eigen_vector_matrix , N);
+
+    Matrix D = multiplyMatrices(
+            multiplyMatrices( eigen_data.eigen_vector_matrix, arrayToVector(A, N)), // Ponieważ push_back vectory wczesniej to dostajemy macierz juz ztransponowana
+            transposed_X
+    );
+
+    cout << "[ Diagonal Matrix ]: \n";
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            cout << D[i][j] << " ";
+            matrix_D_file << D[i][j] << " ";
+        }
+        cout << "\n";
+        matrix_D_file << "\n";
+    }
+
 
     eigenvalues_file.close();
     matrix_D_file.close();
-
 
     return 0;
 }
