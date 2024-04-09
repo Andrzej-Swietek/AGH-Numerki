@@ -32,7 +32,7 @@ int main() {
     fprintf(fp_alpha, "alpha\n");
     fprintf(fp_eigenvalues, "alpha\teigenvalue_1\teigenvalue_2\teigenvalue_3\teigenvalue_4\teigenvalue_5\teigenvalue_6\n");
     
-    for(int alpha = 0; alpha < 100; alpha+=2) {  // Pojedyncy problem
+    for(int alpha = 0; alpha <= 100; alpha+=2) {  // Pojedyncy problem
 
 
         // Wypełnienie Macierzy A i B
@@ -58,7 +58,7 @@ int main() {
         }
         fprintf(fp_eigenvalues, "\n");
     
-        if (alpha == 0 || alpha == 98) {
+        if (alpha == 0 || alpha == 100) {
             char filename[50];
             sprintf(filename, "data/eigenvectors_alpha_%d.txt", alpha);
             FILE *fp_eigenvectors = fopen(filename, "w");
