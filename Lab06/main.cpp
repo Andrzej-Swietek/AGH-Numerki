@@ -97,7 +97,7 @@ int main() {
 /// Pierwszy Pierwsiastek
 
     FILE *fp_solutions_1 = fopen("data/pierwiastek_1.csv", "w");
-    double x1 = 1.6; double x2 = 2.1; double x3 = 2.0;
+    double x1 = 1.5; double x2 = 1.75; double x3 = 1.65;
     fprintf(fp_solutions_1, "iteracja\tx\tepsilon\n");
 
     Find_Solution(x1, x2, x3, fp_solutions_1);
@@ -110,9 +110,9 @@ int main() {
     fprintf(fp_solutions_2, "iteracja\tx\tepsilon\n");
 
  
-    x1 = 1.75;
-    x2 = 2;
-    x3 = 1.55;
+    x1 = 1.85;
+    x2 = 2.0;
+    x3 = 1.9;
     Find_Solution(x1, x2, x3, fp_solutions_2);
 
     fclose(fp_solutions_2);
@@ -122,9 +122,9 @@ int main() {
     fprintf(fp_solutions_3, "iteracja\tx\tepsilon\n");
 
 
-    x1 = 1.4;
-    x2 = 1.7; 
-    x3 = 1.55;
+    x1 = 2.0;
+    x2 = 2.3; 
+    x3 = 2.4;
     Find_Solution(x1, x2, x3, fp_solutions_3);
 
     fclose(fp_solutions_3);
@@ -138,7 +138,9 @@ std::cout << "===================== Modified Method =====================\n";
 /// Pierwszy Pierwsiastek
 
     FILE *fp_solutions_1_m = fopen("data/pierwiastek_1_m.csv", "w");
-    x1 = 1.6;  x2 = 2.1;  x3 = 2.0;
+    x1 = 1.6; 
+    x2 = 1.8; 
+    x3 = 1.7;
     fprintf(fp_solutions_1, "iteracja\tx\tepsilon\n");
 
     Find_Solution_Modified(x1, x2, x3, fp_solutions_1_m);
@@ -151,9 +153,9 @@ std::cout << "===================== Modified Method =====================\n";
     fprintf(fp_solutions_2_m, "iteracja\tx\tepsilon\n");
 
  
-    x1 = 1.8;
-    x2 = 2;
-    x3 = 1.55;
+    x1 = 1.85;
+    x2 = 2.0;
+    x3 = 1.9;
     Find_Solution_Modified(x1, x2, x3, fp_solutions_2_m);
 
     fclose(fp_solutions_2_m);
@@ -163,9 +165,9 @@ std::cout << "===================== Modified Method =====================\n";
     fprintf(fp_solutions_3_m, "iteracja\tx\tepsilon\n");
 
 
-    x1 = 1.4;
-    x2 = 1.7; 
-    x3 = 1.55;
+    x1 = 2.0;
+    x2 = 2.3; 
+    x3 = 2.4;
     Find_Solution_Modified(x1, x2, x3, fp_solutions_3_m);
 
     fclose(fp_solutions_3_m);
