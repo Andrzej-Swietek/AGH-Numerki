@@ -48,9 +48,6 @@ void print_gsl_matrix(gsl_matrix *A) {
 
 // Funkcja rozwiązująca układ równań
 void solve_system(double* c, double* f_k, double* b, int n) {
-    int M = 4;
-    int N = 4;
-
     gsl_matrix* A = gsl_matrix_alloc(n, n);
     gsl_vector* x = gsl_vector_alloc(n);
     gsl_vector* y = gsl_vector_alloc(n);
@@ -76,8 +73,8 @@ void solve_system(double* c, double* f_k, double* b, int n) {
 
     // Przypisanie rozwiązania do wektora b
     b[0] = 1.0;
-    for (int i = 1; i < n; ++i) {
-        b[i] = gsl_vector_get(x, i-1);
+    for (int i = 1; i <= n; ++i) {
+        b[i] = gsl_vector_get(x, n - i );
     }
 
     // Zwolnienie pamięci
@@ -99,13 +96,25 @@ void calculate_vector_c(double*c, double* f_k, int n) {
     cout << "\nc_k:\n";
     for (int k = 0; k <= n; ++k) {
         c[k] = f_k[k] / factorial(k); // od tego momentu f_k to c_k
-        cout << "c_" << k << " = " << f_k[k] << endl;
+        cout << "c_" << k << " = " << c[k] << endl;
     }
 }
 
+void calculate_vector_a(double*a, double* b, double* c, int N) {
+    fill(a, a + N + 1, 0.0);
+    for (int i = 0; i <= N; i++ )
+        for (int j =0; j <= i; j++)
+            a[i] += c[i-j] * b[j];
+}
+
 int main() {
+
+    // Stopnie wielomianów Q_M(x) i P_N(x)
+    int M = 4;
+    int N = 4;
+
     // Stopień pochodnych
-   int n = 10;
+    int n = M+N;
 
     // Inicjalizacja tablicy na przechowywanie pochodnych
     double f_k[n+1];
@@ -118,37 +127,37 @@ int main() {
         cout << "f^(" << k << ")(0) = " << f_k[k] << endl;
     }
 
-    cout << "\nc_k:\n";
-    for (int k = 0; k <= n; ++k) {
-        c[k] = f_k[k] / factorial(k); // od tego momentu f_k to c_k
-        cout << "c_" << k << " = " << f_k[k] << endl;
-    }
-
     calculate_vector_c(c, f_k, n);
 
-    // Stopnie wielomianów Q_M(x) i P_N(x)
-    int M = 4;
-    int N = 4;
 
     // Inicjalizacja tablic na współczynniki wielomianów
     double matrix_c[N+M+1], b[M+1];
     for (int i = 0; i <= M-1; i++)
         for(int j = 0; j <= M-1; j++ )
-            matrix_c[ i ] = f_k[N - M + i +1 ];
+            matrix_c[ i + j ] = c[N - M + i +1 ]; // lub   matrix_c[i + j] = c[j]; etc
 
     // Rozwiązanie układu równań
     solve_system(matrix_c, c, b, N);
 
     // Wyświetlanie współczynników wielomianów
     cout << "\nWspółczynniki wielomianu Q_M(x):\n";
-    for (int i = 0; i <= M; ++i) 
+    for (int i = 0; i <= M; ++i)
         cout << "b_" << i << " = " << b[i] << endl;
 
-    
+    // vector a
+    double a[n+1] = {0};
+    calculate_vector_a(a, b, c, N);
+
+
+    cout << "\nWspółczynniki wielomianu P_N(x):\n";
+    for (int i = 0; i <= N; ++i)
+        cout << "a_" << i << " = " << a[i] << endl;
+
+
     ofstream file("data/approximation_results_" + to_string(N) + "_" + to_string(M) + ".csv");
     file << "x y\n";
     for (double x = -5.0; x <= 5.0; x += 0.1 ){
-        double approximated = R_NM(x, c, b, N, M);
+        double approximated = R_NM(x, a, b, N, M);
         file << x << " " << approximated << endl;
     }
     file.close();
