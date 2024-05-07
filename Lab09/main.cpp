@@ -47,18 +47,26 @@ void print_gsl_matrix(gsl_matrix *A) {
 
 
 // Funkcja rozwiązująca układ równań
-void solve_system(double* c, double* f_k, double* b, int n) {
-    gsl_matrix* A = gsl_matrix_alloc(n, n);
-    gsl_vector* x = gsl_vector_alloc(n);
-    gsl_vector* y = gsl_vector_alloc(n);
-    gsl_permutation* p = gsl_permutation_alloc(n);
+void solve_system(double* c, double* f_k, double* b, int N, int M) {
+    gsl_matrix* A = gsl_matrix_alloc(M, M);
+    gsl_vector* x = gsl_vector_alloc(M);
+    gsl_vector* y = gsl_vector_alloc(M);
+    gsl_permutation* p = gsl_permutation_alloc(M);
 
     // Inicjalizacja macierzy A i wektora y
-    for (int i = 0; i < n; ++i) {
-        gsl_vector_set(y, i, -f_k[i]);
-        for (int j = 0; j < n; ++j) {
-            gsl_matrix_set(A, i, j, c[i+j]);
-//            gsl_matrix_set(A, i, j, c[N - M + i + j + 1]);
+//    for (int i = 0; i < n; ++i) {
+//        gsl_vector_set(y, i, -f_k[i]);
+//        for (int j = 0; j < n; ++j) {
+//            gsl_matrix_set(A, i, j, c[i+j]);
+////            gsl_matrix_set(A, i, j, c[N - M + i + j + 1]);
+//        }
+//    }
+
+    for (int i = 0; i < M; i++) {
+        gsl_vector_set(y, i, -f_k[N + 1 + i]);
+        for (int j = 0; j < M; j++) {
+            double value = c[N - M + i + j + 1];
+            gsl_matrix_set(A, i, j, value);
         }
     }
 
@@ -73,9 +81,20 @@ void solve_system(double* c, double* f_k, double* b, int n) {
 
     // Przypisanie rozwiązania do wektora b
     b[0] = 1.0;
-    for (int i = 1; i <= n; ++i) {
-        b[i] = gsl_vector_get(x, n - i );
+    vector<double> bk, reversed;
+    for (int i = 0; i < M; i++)
+        reversed.push_back(gsl_vector_get(x, i));
+
+    for (int i = M - 1; i >= 0; i--)
+        bk.push_back(reversed[i]);
+
+    for (int i = 0; i < bk.size(); ++i) {
+        b[i+1] = bk[i];
     }
+
+//    for (int i = 1; i <= n; ++i) {
+//        b[i] = gsl_vector_get(x, n - i );
+//    }
 
     // Zwolnienie pamięci
     gsl_matrix_free(A);
@@ -94,24 +113,29 @@ double R_NM(double x, double *a, double *b, int N, int M){
 
 void calculate_vector_c(double*c, double* f_k, int n) {
     cout << "\nc_k:\n";
-    for (int k = 0; k <= n; ++k) {
+    for (int k = 0; k < n+1; ++k) {
         c[k] = f_k[k] / factorial(k); // od tego momentu f_k to c_k
         cout << "c_" << k << " = " << c[k] << endl;
     }
 }
 
+
 void calculate_vector_a(double*a, double* b, double* c, int N) {
     fill(a, a + N + 1, 0.0);
-    for (int i = 0; i <= N; i++ )
-        for (int j =0; j <= i; j++)
-            a[i] += c[i-j] * b[j];
+    for (int i = 0; i <= N; i++ ) {
+        double sum = 0.0;
+        for (int j = 0; j <= i; j++)
+            sum += c[i - j] * b[j];
+
+        a[i] = sum;
+    }
 }
 
 int main() {
 
     // Stopnie wielomianów Q_M(x) i P_N(x)
-    int M = 4;
-    int N = 4;
+    int M = 6;
+    int N = 6;
 
     // Stopień pochodnych
     int n = M+N;
@@ -137,7 +161,7 @@ int main() {
             matrix_c[ i + j ] = c[N - M + i +1 ]; // lub   matrix_c[i + j] = c[j]; etc
 
     // Rozwiązanie układu równań
-    solve_system(matrix_c, c, b, N);
+    solve_system(c, c, b, N, M);
 
     // Wyświetlanie współczynników wielomianów
     cout << "\nWspółczynniki wielomianu Q_M(x):\n";

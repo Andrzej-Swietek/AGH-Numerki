@@ -5,7 +5,7 @@ import pandas as pd
 SAVE = True
 
 # for i in [4, 2, 6]:
-for i in [4]:
+for i in [2,6]:
     df = pd.read_csv('data/approximation_results_{}_{}.csv'.format(i,i), sep=' ')
 
     x = df["x"]
