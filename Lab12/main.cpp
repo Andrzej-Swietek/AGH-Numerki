@@ -49,13 +49,20 @@ double trapezoidalIntegral(const vector<double>& f, double h, int n) {
 
 // Function to calculate the Simpson's 3/8 rule integral
 double simpsonIntegral(const vector<double>& f, double h, int n) {
-    double sum1 = 0, sum2 = 0;
-    for (int i = 1; i < n; i++) {
-        sum1 += f[i];
-        sum2 += f[2 * i];
+    if (n % 3 != 0) {
+        throw invalid_argument("n must be a multiple of 3 for Simpson's 3/8 rule.");
     }
-    return h * (f[0] + f[n] + 4 * sum1 + 2 * sum2) / 3;
+    double sum = f[0] + f[n];
+    for (int i = 1; i < n; i++) {
+        if (i % 3 == 0) {
+            sum += 2 * f[i];
+        } else {
+            sum += 3 * f[i];
+        }
+    }
+    return (3 * h / 8) * sum;
 }
+
 
 // Function to perform Richardson Extrapolation
 vector<vector<double>> richardsonExtrapolation(const vector<double>& f, double a, double b, int maxN) {
@@ -75,57 +82,74 @@ vector<vector<double>> richardsonExtrapolation(const vector<double>& f, double a
     return integrals;
 }
 
+vector<vector<double>> richardsonExtrapolation(const function<double(double)>& f, double a, double b, int maxN, bool useSimpson) {
+    vector<vector<double>> integrals(maxN + 1, vector<double>(maxN + 1));
+
+    for (int n = 0; n <= maxN; n++) {
+        int N = useSimpson ? 3 * pow(2, n) : pow(2, n);
+        double h = (b - a) / N;
+        vector<double> f_values(N + 1);
+
+        for (int i = 0; i <= N; ++i) {
+            double x = a + i * h;
+            f_values[i] = f(x);
+        }
+
+        if (useSimpson) {
+            integrals[n][0] = simpsonIntegral(f_values, h, N);
+        } else {
+            integrals[n][0] = trapezoidalIntegral(f_values, h, N);
+        }
+
+        for (int k = 1; k <= n; k++) {
+            integrals[n][k] = (pow(4, k) * integrals[n][k - 1] - integrals[n - 1][k - 1]) / (pow(4, k) - 1);
+        }
+    }
+
+    return integrals;
+}
+
+
+void saveResults(const vector<vector<double>>& integrals, const string& filename) {
+    ofstream file(filename);
+    for (const auto& row : integrals) {
+        for (const auto& value : row) {
+            file << value << " ";
+        }
+        file << endl;
+    }
+    file.close();
+}
+
+
 int main() {
+    double a = 0;
+    double b = 1;
+    int maxN = 8;
+
     // Define the function f(x)
-    function<double(double)> f = [](double x) {
+    function<double(double)> func = [](double x) {
         return log(x * x * x + 3 * x * x + x + 0.1) * sin(18 * x);
     };
 
-    // Define the integration limits
-    double a = 0;
-    double b = 1;
+    // Calculate integrals using Richardson Extrapolation
+    auto integralsTrapezoidal = richardsonExtrapolation(func, a, b, maxN, false);
+    auto integralsSimpson = richardsonExtrapolation(func, a, b, maxN, true);
 
-    // Set the maximum number of nodes
-    int maxN = 8;
+    // Save results to files
+    saveResults(integralsTrapezoidal, "data/integrals_trapezoidal.txt");
+    saveResults(integralsSimpson, "data/integrals_simpson.txt");
 
-    // Define discretization (number of points)
-    int N = 100;
-
-    // Create a vector to store function values
-    vector<double> f_values(N + 1);
-
-    // Calculate function values at each point
-    for (int i = 0; i <= N; ++i) {
-        double x = a + (b - a) * i / N;
-        f_values[i] = f(x);
-    }
-
-    // Call richardsonExtrapolation with the pre-computed vector
-    vector<vector<double>> integralsTrapezoidal = richardsonExtrapolation(f_values, a, b, maxN);
-    vector<vector<double>> integralsSimpson = richardsonExtrapolation(f_values, a, b, maxN);
-
-    // Print the results for Trapezoidal rule
+    // Print results for Trapezoidal rule
     cout << "Trapezoidal Rule:" << endl;
     for (int n = 0; n <= maxN; n++) {
         cout << "N = " << n << ": " << integralsTrapezoidal[n][n] << endl;
     }
 
-    // Print the results for Simpson's 3/8 rule
+    // Print results for Simpson's 3/8 rule
     cout << endl << "Simpson's 3/8 Rule:" << endl;
     for (int n = 0; n <= maxN; n++) {
         cout << "N = " << n << ": " << integralsSimpson[n][n] << endl;
-    }
-
-    for ( auto row :  integralsTrapezoidal) {
-        for ( auto column : row ) 
-            cout << column << " ";
-        cout << "\n";
-    }
-
-    for ( auto row :  integralsSimpson) {
-        for ( auto column : row ) 
-            cout << column << " ";
-        cout << "\n";
     }
 
 
